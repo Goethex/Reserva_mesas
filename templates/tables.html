@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Mesas del Restaurante</h2>
+
+<!-- Form to select time slot -->
+<div class="mb-3">
+    <form method="get" action="/tables" id="tableAvailabilityForm">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label for="reservation_date" class="form-label">Fecha</label>
+                <input type="date" class="form-control" id="reservation_date" name="reservation_date"
+                       value="{{ reservation_date if reservation_date else '' }}"
+                       min="{{ today }}" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="start_time" class="form-label">Hora de Inicio</label>
+                <input type="time" class="form-control" id="start_time" name="start_time"
+                       value="{{ start_time if start_time else '19:00' }}"
+                       min="10:00" max="22:00" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="end_time" class="form-label">Hora de Fin</label>
+                <input type="time" class="form-control" id="end_time" name="end_time"
+                       value="{{ end_time if end_time else '21:00' }}"
+                       min="10:00" max="22:00" required>
+            </div>
+        </div>
+        <button type="submit" class="btn colorbtn2">Ver Disponibilidad</button>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Capacidad</th>
+                <th>Ubicación</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for table in tables %}
+            <tr>
+                <td>{{ table.number }}</td>
+                <td>{{ table.capacity }} personas</td>
+                <td>{{ table.location }}</td>
+                <td>
+                    {% if table.status %}
+                        {% if table.status == 'available' %}
+                            <span class="badge bg-success">Disponible</span>
+                        {% else %}
+                            <span class="badge bg-danger">Reservada</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-secondary">Seleccionar horario</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if table.status == 'available' %}
+                    <a href="/new_reservation?table_id={{ table.id }}&reservation_date={{ reservation_date }}&start_time={{ start_time }}&end_time={{ end_time }}"
+                       class="btn btn-sm colorbtn2">Reservar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- JavaScript for time validation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('tableAvailabilityForm');
+    const startTime = document.getElementById('start_time');
+    const endTime = document.getElementById('end_time');
+
+    form.addEventListener('submit', function(event) {
+        if (startTime.value >= endTime.value) {
+            event.preventDefault();
+            alert('La hora de fin debe ser posterior a la hora de inicio.');
+        }
+    });
+});
+</script>
+{% endblock %}

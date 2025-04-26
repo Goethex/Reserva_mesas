@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Plantillas de Reserva</h2>
+<p>Selecciona una plantilla para crear una nueva reserva rápidamente:</p>
+
+<div class="row">
+    {% for template in templates %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                {% if template.type == 'standard' %}
+                <h5>Reserva Estándar</h5>
+                {% elif template.type == 'vip' %}
+                <h5>Reserva VIP</h5>
+                {% elif template.type == 'group' %}
+                <h5>Reserva de Grupo</h5>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p><strong>Horario:</strong> {{ template.start_time }} - {{ template.end_time }}</p>
+                <p><strong>Personas:</strong> {{ template.guests }}</p>
+                <p><strong>Tipo:</strong> {{ template.type }}</p>
+                <a href="/use_template/{{ template.type }}" class="btn colorbtn1">Usar esta plantilla</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

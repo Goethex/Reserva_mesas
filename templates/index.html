@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Sistema de Reservas de Restaurante</h1>
+    <p class="lead">Gestiona las reservas de tu restaurante de manera eficiente.</p>
+    <hr class="my-4">
+    <p>Este sistema implementa los patrones de diseño Factory Method, Abstract Factory, Builder, Prototype y Flyweight.</p>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Mesas</h5>
+                    <p class="card-text">Ver todas las mesas disponibles en el restaurante.</p>
+                    <a href="/tables" class="btn colorbtn1">Ver Mesas</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Reservas</h5>
+                    <p class="card-text">Gestionar las reservas existentes.</p>
+                    <a href="/reservations" class="btn colorbtn2">Ver Reservas</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Nueva Reserva</h5>
+                    <p class="card-text">Crear una nueva reserva para un cliente.</p>
+                    <a href="/new_reservation" class="btn colorbtn4">Crear Reserva</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

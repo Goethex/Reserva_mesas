@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Reservas</h2>
+<div class="mb-3">
+    <a href="/new_reservation" class="btn colorbtn4">Nueva Reserva</a>
+</div>
+<div class="table-container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Mesa</th>
+                <th>Fecha</th>
+                <th>Hora Inicio</th>
+                <th>Hora Fin</th>
+                <th>Personas</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation['customer_name'] }}</td>
+                <td>{{ reservation['customer_phone'] }}</td>
+                <td>{{ reservation['table_number'] }}</td>
+                <td>{{ reservation['reservation_date'] }}</td>
+                <td>{{ reservation['start_time'] }}</td>
+                <td>{{ reservation['end_time'] }}</td>
+                <td>{{ reservation['guests'] }}</td>
+                <td>
+                    {% if reservation['type'] == 'standard' %}
+                    <span class="badge bg-primary">Estándar</span>
+                    {% elif reservation['type'] == 'vip' %}
+                    <span class="badge bg-warning">VIP</span>
+                    {% elif reservation['type'] == 'group' %}
+                    <span class="badge bg-info">Grupo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if reservation['status'] == 'confirmed' %}
+                    <span class="badge bg-success">Confirmada</span>
+                    {% elif reservation['status'] == 'cancelled' %}
+                    <span class="badge bg-danger">Cancelada</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if reservation['status'] == 'confirmed' %}
+                    <a href="{{ url_for('edit_reservation', reservation_id=reservation['id']) }}"
+                       class="btn btn-sm colorbtn1">Editar</a>
+                    <form action="{{ url_for('cancel_reservation', reservation_id=reservation['id']) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm colorbtn3"
+                                onclick="return confirm('¿Estás seguro de cancelar esta reserva?');">
+                            Cancelar
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

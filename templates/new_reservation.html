@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>{{ 'Editar Reserva' if editing else 'Nueva Reserva' }}</h2>
+
+<!-- Display flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="post" action="{{ url_for('edit_reservation', reservation_id=reservation_id) if editing else url_for('new_reservation') }}" id="reservationForm">
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="customer_name" class="form-label">Nombre del Cliente</label>
+            <input type="text" class="form-control" id="customer_name" name="customer_name" required
+                   value="{{ form_data.customer_name if form_data else template.customer_name if template else '' }}">
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="customer_phone" class="form-label">Teléfono</label>
+            <input type="text" class="form-control" id="customer_phone" name="customer_phone" required
+                   value="{{ form_data.customer_phone if form_data else template.customer_phone if template else '' }}">
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="table_id" class="form-label">Mesa</label>
+            <select class="form-select" id="table_id" name="table_id" required>
+                <option value="">Seleccionar Mesa</option>
+                {% for table in tables %}
+                <option value="{{ table.id }}"
+                        {% if form_data.table_id|string == table.id|string %}selected{% endif %}
+                        data-capacity="{{ table.capacity }}">
+                    Mesa #{{ table.number }} ({{ table.capacity }} personas - {{ table.location }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="guests" class="form-label">Número de Personas</label>
+            <input type="number" class="form-control" id="guests" name="guests" min="1" required
+                   value="{{ form_data.guests if form_data else template.guests if template else '2' }}">
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label for="reservation_date" class="form-label">Fecha</label>
+            <input type="date" class="form-control" id="reservation_date" name="reservation_date" required
+                   value="{{ form_data.reservation_date if form_data else today if today else '' }}"
+                   min="{{ today if today else '' }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="start_time" class="form-label">Hora de Inicio</label>
+            <input type="time" class="form-control" id="start_time" name="start_time" required
+                   value="{{ form_data.start_time if form_data else template.start_time if template else '19:00' }}"
+                   min="10:00" max="22:00">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="end_time" class="form-label">Hora de Fin</label>
+            <input type="time" class="form-control" id="end_time" name="end_time" required
+                   value="{{ form_data.end_time if form_data else template.end_time if template else '21:00' }}"
+                   min="10:00" max="22:00">
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="reservation_type" class="form-label">Tipo de Reserva</label>
+        <select class="form-select" id="reservation_type" name="reservation_type" required>
+            <option value="standard" {% if (form_data and form_data.reservation_type == 'standard') or (template and template.type == 'standard') %}selected{% endif %}>Estándar</option>
+            <option value="vip" {% if (form_data and form_data.reservation_type == 'vip') or (template and template.type == 'vip') %}selected{% endif %}>VIP</option>
+            <option value="group" {% if (form_data and form_data.reservation_type == 'group') or (template and template.type == 'group') %}selected{% endif %}>Grupo</option>
+        </select>
+    </div>
+    
+    <button type="submit" class="btn colorbtn2">{{ 'Actualizar Reserva' if editing else 'Crear Reserva' }}</button>
+    <a href="/reservations" class="btn colorbtn3">Cancelar</a>
+</form>
+
+<!-- JavaScript for dynamic table filtering, time validation, and guest validation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('reservationForm');
+    const reservationDate = document.getElementById('reservation_date');
+    const startTime = document.getElementById('start_time');
+    const endTime = document.getElementById('end_time');
+    const tableSelect = document.getElementById('table_id');
+    const guestsInput = document.getElementById('guests');
+
+    // Function to update available tables
+    function updateTables() {
+        const date = reservationDate.value;
+        const start = startTime.value;
+        const end = endTime.value;
+
+        if (date && start && end) {
+            fetch(`/get_available_tables?reservation_date=${date}&start_time=${start}&end_time=${end}`)
+                .then(response => response.json())
+                .then(data => {
+                    tableSelect.innerHTML = '<option value="">Seleccionar Mesa</option>';
+                    data.tables.forEach(table => {
+                        const option = document.createElement('option');
+                        option.value = table.id;
+                        option.text = `Mesa #${table.number} (${table.capacity} personas - ${table.location})`;
+                        option.setAttribute('data-capacity', table.capacity);
+                        if (table.id == '{{ form_data.table_id if form_data else '' }}') {
+                            option.selected = true;
+                        }
+                        tableSelect.appendChild(option);
+                    });
+                    // Update guests max based on selected table
+                    updateGuestsMax();
+                })
+                .catch(error => console.error('Error fetching tables:', error));
+        }
+    }
+
+    // Function to update guests input max based on selected table capacity
+    function updateGuestsMax() {
+        const selectedOption = tableSelect.options[tableSelect.selectedIndex];
+        const capacity = selectedOption ? parseInt(selectedOption.getAttribute('data-capacity')) || 0 : 0;
+        if (capacity > 0) {
+            guestsInput.max = capacity;
+            if (guestsInput.value > capacity) {
+                guestsInput.value = capacity;
+            }
+        } else {
+            guestsInput.removeAttribute('max');
+        }
+    }
+
+    // Update tables when date or time changes
+    reservationDate.addEventListener('change', updateTables);
+    startTime.addEventListener('change', updateTables);
+    endTime.addEventListener('change', updateTables);
+
+    // Update guests max when table changes
+    tableSelect.addEventListener('change', updateGuestsMax);
+
+    // Validate end_time > start_time and guests on form submission
+    form.addEventListener('submit', function(event) {
+        if (startTime.value >= endTime.value) {
+            event.preventDefault();
+            alert('La hora de fin debe ser posterior a la hora de inicio.');
+            return;
+        }
+        const selectedOption = tableSelect.options[tableSelect.selectedIndex];
+        const capacity = selectedOption ? parseInt(selectedOption.getAttribute('data-capacity')) || 0 : 0;
+        const guests = parseInt(guestsInput.value);
+        if (capacity > 0 && guests > capacity) {
+            event.preventDefault();
+            alert(`El número de personas (${guests}) excede la capacidad de la mesa (${capacity}).`);
+        }
+    });
+});
+</script>
+{% endblock %}
